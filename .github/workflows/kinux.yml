@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev
+      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools
 
       - run: |
           mkdir -p kinux-rootfs
@@ -26,18 +26,14 @@ jobs:
           done
           cd ../../..
           
-          wget -qO /tmp/musl-cross.tgz https://musl.cc/x86_64-linux-musl-cross.tgz
-          sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-          export PATH="/opt/x86_64-linux-musl-cross/bin:$PATH"
-          
           wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz
           cd oils-for-unix-0.37.0
-          CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ ./configure
-          CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ _build/oils.sh
+          CC=musl-gcc CXX=musl-g++ ./configure
+          CC=musl-gcc CXX=musl-g++ _build/oils.sh
           cp _bin/cxx-opt-sh/oils-for-unix ../kinux-rootfs/usr/local/bin/
           cd .. && rm -rf oils-for-unix-0.37.0
           
-          x86_64-linux-musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
           
           cat > kinux-rootfs/etc/os-release << 'EOF'
           NAME="Kinux"
