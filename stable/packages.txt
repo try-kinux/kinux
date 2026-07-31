@@ -1,0 +1,414 @@
+# =====================================================
+# Kinux Stable Repository
+# https://try-kinux.github.io/kinux/stable/packages.txt
+# =====================================================
+# Licensed under MIT. Copyright (c) 2026 Kinux Team.
+# Contact: try-kinux@proton.me
+# =====================================================
+
+# -----------------------------------------------------
+# Essential Base System
+# -----------------------------------------------------
+
+start_musl
+version=1.2.5
+description=The musl C library - lightweight, fast, and correct
+homepage=https://musl.libc.org/
+license=MIT
+maintainer=Kinux Team <try-kinux@proton.me>
+essential=yes
+fetch=https://musl.libc.org/releases/musl-1.2.5.tar.gz
+
+[instructions]
+./configure --prefix=/usr --syslibdir=/usr/lib
+make -j$(nproc)
+make install
+ln -sf /usr/lib/libc.so /usr/lib/ld-musl-x86_64.so.1
+end_musl
+
+# -----------------------------------------------------
+
+start_busybox
+version=1.36.1
+description=The Swiss Army Knife of embedded Linux
+homepage=https://busybox.net/
+license=GPL-2.0-only
+maintainer=Kinux Team <try-kinux@proton.me>
+essential=yes
+fetch=https://busybox.net/downloads/busybox-1.36.1.tar.bz2
+
+[dependencies]
+musl
+
+[instructions]
+make defconfig
+sed -i 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
+make -j$(nproc)
+make install CONFIG_PREFIX=/usr
+end_busybox
+
+# -----------------------------------------------------
+
+start_zlib
+version=1.3.1
+description=Compression library
+homepage=https://zlib.net/
+license=Zlib
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://zlib.net/zlib-1.3.1.tar.gz
+
+[dependencies]
+musl
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_zlib
+
+# -----------------------------------------------------
+
+start_openssl
+version=3.4.0
+description=OpenSSL - Cryptography and SSL/TLS Toolkit
+homepage=https://www.openssl.org/
+license=Apache-2.0
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://www.openssl.org/source/openssl-3.4.0.tar.gz
+
+[dependencies]
+musl
+zlib
+
+[instructions]
+./Configure linux-x86_64 --prefix=/usr --openssldir=/etc/ssl
+make -j$(nproc)
+make install
+end_openssl
+
+# -----------------------------------------------------
+
+start_curl
+version=8.11.0
+description=Command line tool for transferring data with URL syntax
+homepage=https://curl.se/
+license=curl
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://curl.se/download/curl-8.11.0.tar.xz
+
+[dependencies]
+musl
+openssl >= 3.0
+zlib
+
+[instructions]
+./configure --prefix=/usr --with-openssl --with-zlib
+make -j$(nproc)
+make install
+end_curl
+
+# -----------------------------------------------------
+
+start_libffi
+version=3.4.6
+description=Portable Foreign Function Interface Library
+homepage=https://sourceware.org/libffi/
+license=MIT
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://github.com/libffi/libffi/releases/download/v3.4.6/libffi-3.4.6.tar.gz
+
+[dependencies]
+musl
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_libffi
+
+# -----------------------------------------------------
+# Build Tools
+# -----------------------------------------------------
+
+start_binutils
+version=2.43
+description=GNU Binary Utilities (linker, assembler, etc.)
+homepage=https://www.gnu.org/software/binutils/
+license=GPL-3.0-or-later
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://ftp.gnu.org/gnu/binutils/binutils-2.43.tar.gz
+
+[dependencies]
+musl
+
+[instructions]
+./configure --prefix=/usr --with-sysroot=/usr
+make -j$(nproc)
+make install
+end_binutils
+
+# -----------------------------------------------------
+
+start_gmp
+version=6.3.0
+description=GNU Multiple Precision Arithmetic Library
+homepage=https://gmplib.org/
+license=LGPL-3.0-or-later
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz
+
+[dependencies]
+musl
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_gmp
+
+# -----------------------------------------------------
+
+start_mpfr
+version=4.2.1
+description=Multiple Precision Floating-Point Reliable Library
+homepage=https://www.mpfr.org/
+license=LGPL-3.0-or-later
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://www.mpfr.org/mpfr-current/mpfr-4.2.1.tar.xz
+
+[dependencies]
+musl
+gmp
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_mpfr
+
+# -----------------------------------------------------
+
+start_mpc
+version=1.3.1
+description=Multiple Precision Complex Library
+homepage=http://www.multiprecision.org/
+license=LGPL-3.0-or-later
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz
+
+[dependencies]
+musl
+gmp
+mpfr
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_mpc
+
+# -----------------------------------------------------
+
+start_make
+version=4.4.1
+description=GNU Make - build automation tool
+homepage=https://www.gnu.org/software/make/
+license=GPL-3.0-or-later
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz
+
+[dependencies]
+musl
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_make
+
+# -----------------------------------------------------
+
+start_gcc
+version=14.2.0
+description=GNU Compiler Collection
+homepage=https://gcc.gnu.org/
+license=GPL-3.0-or-later
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://ftp.gnu.org/gnu/gcc/gcc-14.2.0/gcc-14.2.0.tar.xz
+
+[dependencies]
+musl
+binutils
+gmp
+mpfr
+mpc
+
+[instructions]
+mkdir build && cd build
+../configure --prefix=/usr --enable-languages=c,c++ --with-musl --disable-multilib
+make -j$(nproc)
+make install
+end_gcc
+
+# -----------------------------------------------------
+# Development Tools
+# -----------------------------------------------------
+
+start_git
+version=2.47.0
+description=Distributed version control system
+homepage=https://git-scm.com/
+license=GPL-2.0-only
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.47.0.tar.xz
+
+[dependencies]
+musl
+openssl >= 3.0
+zlib
+curl
+
+[instructions]
+make configure
+./configure --prefix=/usr
+make all -j$(nproc)
+make install
+end_git
+
+# -----------------------------------------------------
+
+start_python
+version=3.12.8
+description=Python programming language
+homepage=https://www.python.org/
+license=PSF-2.0
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://www.python.org/ftp/python/3.12.8/Python-3.12.8.tar.xz
+
+[dependencies]
+musl
+openssl >= 3.0
+zlib
+libffi
+
+[versions]
+3.11.11 https://www.python.org/ftp/python/3.11.11/Python-3.11.11.tar.xz
+
+[provides]
+python3
+
+[instructions]
+./configure --prefix=/usr --enable-optimizations
+make -j$(nproc)
+make install
+end_python
+
+# -----------------------------------------------------
+
+start_nodejs
+version=22.12.0
+description=Node.js JavaScript runtime
+homepage=https://nodejs.org/
+license=MIT
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://nodejs.org/dist/v22.12.0/node-v22.12.0-linux-x64.tar.xz
+
+[dependencies]
+musl
+openssl >= 3.0
+zlib
+
+[tar_files]
+node-v22.12.0-linux-x64/bin/*
+node-v22.12.0-linux-x64/lib/*
+node-v22.12.0-linux-x64/include/*
+
+[provides]
+node
+npm
+npx
+end_nodejs
+
+# -----------------------------------------------------
+
+start_neovim
+version=0.10.2
+description=Hyperextensible Vim-based text editor
+homepage=https://neovim.io/
+license=Apache-2.0
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://github.com/neovim/neovim/releases/download/v0.10.2/nvim-linux64.tar.gz
+
+[dependencies]
+musl
+
+[tar_files]
+nvim-linux64/bin/*
+nvim-linux64/lib/*
+nvim-linux64/share/*
+
+[provides]
+editor
+vim
+end_neovim
+
+# -----------------------------------------------------
+
+start_zsh
+version=5.9
+description=Z shell - powerful shell with scripting
+homepage=https://www.zsh.org/
+license=MIT-like
+maintainer=Kinux Team <try-kinux@proton.me>
+fetch=https://sourceforge.net/projects/zsh/files/zsh/5.9/zsh-5.9.tar.xz
+
+[dependencies]
+musl
+
+[instructions]
+./configure --prefix=/usr
+make -j$(nproc)
+make install
+end_zsh
+
+# -----------------------------------------------------
+# Meta Packages
+# -----------------------------------------------------
+
+start_kinux-base
+version=1.0
+description=Kinux base system - minimal bootable system
+homepage=https://try-kinux.github.io/kinux/
+license=MIT
+maintainer=Kinux Team <try-kinux@proton.me>
+is_meta=true
+essential=yes
+
+[dependencies]
+musl
+busybox
+openssl
+zlib
+curl
+end_kinux-base
+
+# -----------------------------------------------------
+
+start_kinux-dev
+version=1.0
+description=Kinux development environment
+homepage=https://try-kinux.github.io/kinux/
+license=MIT
+maintainer=Kinux Team <try-kinux@proton.me>
+is_meta=true
+
+[dependencies]
+git
+gcc
+make
+python >= 3.11
+nodejs
+neovim
+zsh
+curl
+end_kinux-dev
