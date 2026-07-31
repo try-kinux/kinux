@@ -15,7 +15,7 @@ jobs:
 
       - run: |
           mkdir -p kinux-rootfs
-          mkdir -p kinux-rootfs/{bin,dev,etc,proc,sys,tmp,usr/local/bin,var,home,root}
+          mkdir -p kinux-rootfs/{bin,dev,etc,proc,sys,tmp,usr/local/bin,usr/lib,var,home,root}
           
           wget -qO kinux-rootfs/bin/busybox https://busybox.net/downloads/binaries/1.35.0-x86_64-linux-musl/busybox
           chmod +x kinux-rootfs/bin/busybox
@@ -32,11 +32,16 @@ jobs:
           CC=musl-gcc CXX=musl-g++ _build/oils.sh
           mkdir -p ../kinux-rootfs/usr/local/bin
           cp _bin/cxx-opt-sh/oils-for-unix ../kinux-rootfs/usr/local/bin/
-          cd ..
+          cd .. && rm -rf oils-for-unix-0.37.0
           
-          musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          gcc bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
           
-          rm -rf oils-for-unix-0.37.0
+          cp /usr/lib/x86_64-linux-gnu/libarchive.so.13 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libcurl.so.4 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libzstd.so.1 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libjson-c.so.5 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libssl.so.3 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libcrypto.so.3 kinux-rootfs/usr/lib/
           
           cat > kinux-rootfs/etc/os-release << 'EOF'
           NAME="Kinux"
@@ -58,25 +63,13 @@ jobs:
           mkdir -p kinux-rootfs/home/kinux
           echo 'export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"' > kinux-rootfs/home/kinux/.profile
           echo 'export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"' > kinux-rootfs/root/.profile
+          echo 'export LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"' >> kinux-rootfs/home/kinux/.profile
+          echo 'export LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"' >> kinux-rootfs/root/.profile
           
           cat > kinux-rootfs/etc/profile << 'EOF'
           export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"
           EOF
-          
-          cat > kinux-rootfs/etc/inittab << 'EOF'
-          ::sysinit:/etc/init.d/rcS
-          tty1::respawn:/usr/local/bin/oils-for-unix
-          tty2::respawn:/usr/local/bin/oils-for-unix
-          EOF
-          
-          cat > kinux-rootfs/etc/init.d/rcS << 'EOF'
-          #!/bin/busybox sh
-          /bin/busybox mount -t proc proc /proc
-          /bin/busybox mount -t sysfs sys /sys
-          /bin/busybox mount -t devtmpfs dev /dev
-          /bin/busybox hostname kinux
-          EOF
-          chmod +x kinux-rootfs/etc/init.d/rcS
           
           sudo tar -cJf kinux-rootfs.tar.xz -C kinux-rootfs .
           mkdir -p artifacts
