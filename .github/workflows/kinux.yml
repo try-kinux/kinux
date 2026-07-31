@@ -32,9 +32,11 @@ jobs:
           CC=musl-gcc CXX=musl-g++ _build/oils.sh
           mkdir -p ../kinux-rootfs/usr/local/bin
           cp _bin/cxx-opt-sh/oils-for-unix ../kinux-rootfs/usr/local/bin/
-          cd .. && rm -rf oils-for-unix-0.37.0
+          cd ..
           
           musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          
+          rm -rf oils-for-unix-0.37.0
           
           cat > kinux-rootfs/etc/os-release << 'EOF'
           NAME="Kinux"
