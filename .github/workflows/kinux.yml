@@ -24,15 +24,16 @@ jobs:
           for cmd in sh ls cat cp mv rm mkdir rmdir chmod chown mount umount grep sed awk tar gzip xz head tail less more vi find du df ps kill ln readlink realpath basename dirname stat sleep sync touch mknod chroot env expr wc uname cut sort tee tr uniq wget printf seq yes clear reset tty id whoami groups passwd login su; do
             ln -s /bin/busybox $cmd
           done
-          cd ../../..
+          cd "$GITHUB_WORKSPACE"
           
           wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz
           cd oils-for-unix-0.37.0
           CC=musl-gcc CXX=musl-g++ ./configure
           CC=musl-gcc CXX=musl-g++ _build/oils.sh
-          mkdir -p ../kinux-rootfs/usr/local/bin
-          cp _bin/cxx-opt-sh/oils-for-unix ../kinux-rootfs/usr/local/bin/
-          cd .. && rm -rf oils-for-unix-0.37.0
+          mkdir -p "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin"
+          cp _bin/cxx-opt-sh/oils-for-unix "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin/"
+          cd "$GITHUB_WORKSPACE"
+          rm -rf oils-for-unix-0.37.0
           
           gcc bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
           
