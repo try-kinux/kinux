@@ -17,9 +17,6 @@ jobs:
           mkdir -p kinux-rootfs
           mkdir -p kinux-rootfs/{bin,dev,etc,proc,sys,tmp,usr/local/bin,var,home,root}
           
-          wget -qO- https://musl.cc/x86_64-linux-musl-cross.tgz | sudo tar -xz -C /opt/
-          export PATH="/opt/x86_64-linux-musl-cross/bin:$PATH"
-          
           wget -qO kinux-rootfs/bin/busybox https://busybox.net/downloads/binaries/1.35.0-x86_64-linux-musl/busybox
           chmod +x kinux-rootfs/bin/busybox
           
@@ -29,7 +26,10 @@ jobs:
           done
           cd ../../..
           
-          wget -qO- https://musl.cc/x86_64-linux-musl-cross.tgz | sudo tar -xz -C /opt/
+          wget -qO /tmp/musl-cross.tgz https://musl.cc/x86_64-linux-musl-cross.tgz
+          sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
+          export PATH="/opt/x86_64-linux-musl-cross/bin:$PATH"
+          
           wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz
           cd oils-for-unix-0.37.0
           CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ ./configure
@@ -37,7 +37,7 @@ jobs:
           cp _bin/cxx-opt-sh/oils-for-unix ../kinux-rootfs/usr/local/bin/
           cd .. && rm -rf oils-for-unix-0.37.0
           
-          CC=x86_64-linux-musl-gcc CFLAGS="-static" gcc bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          x86_64-linux-musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
           
           cat > kinux-rootfs/etc/os-release << 'EOF'
           NAME="Kinux"
