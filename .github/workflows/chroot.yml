@@ -1,0 +1,24 @@
+name: Chroot Kinux
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  chroot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: |
+          mkdir -p kinux-fs
+          sudo tar -xJf kinux-rootfs.tar.xz -C kinux-fs
+          sudo mount --bind /dev kinux-fs/dev
+          sudo mount --bind /proc kinux-fs/proc
+          sudo mount --bind /sys kinux-fs/sys
+          sudo cp /etc/resolv.conf kinux-fs/etc/resolv.conf
+          sudo chroot kinux-fs /usr/local/bin/oils-for-unix osh -c 'echo "Hello from Kinux"; cat /etc/os-release; echo "PATH=$PATH"; echo "SHELL=$SHELL"; bux'
+          sudo umount -l kinux-fs/dev
+          sudo umount -l kinux-fs/proc
+          sudo umount -l kinux-fs/sys
