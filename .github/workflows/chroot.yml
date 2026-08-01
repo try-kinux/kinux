@@ -14,19 +14,15 @@ jobs:
       - run: |
           mkdir -p kinux-fs
           sudo tar -xJf kinux-rootfs.tar.xz -C kinux-fs
-          mkdir -p kinux-fs/lib64 kinux-fs/usr/lib/x86_64-linux-gnu
-          sudo cp /lib64/ld-linux-x86-64.so.2 kinux-fs/lib64/
-          sudo cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6 kinux-fs/usr/lib/x86_64-linux-gnu/
           sudo mount --bind /dev kinux-fs/dev
           sudo mount --bind /proc kinux-fs/proc
           sudo mount --bind /sys kinux-fs/sys
+          sudo mount --bind /usr kinux-fs/usr
+          sudo mount --bind /lib64 kinux-fs/lib64
           sudo cp /etc/resolv.conf kinux-fs/etc/resolv.conf
-          sudo chroot kinux-fs /usr/local/bin/oils-for-unix osh -c '
-            echo "Hello from Kinux"
-            cat /etc/os-release
-            echo "PATH=$PATH"
-            bux
-          '
+          sudo chroot kinux-fs /usr/local/bin/oils-for-unix osh -c 'bux'
           sudo umount -l kinux-fs/dev
           sudo umount -l kinux-fs/proc
           sudo umount -l kinux-fs/sys
+          sudo umount -l kinux-fs/usr
+          sudo umount -l kinux-fs/lib64
