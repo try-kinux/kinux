@@ -1,0 +1,14 @@
+name: test 
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  chroot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: file kinux-rootfs.tar.xz
