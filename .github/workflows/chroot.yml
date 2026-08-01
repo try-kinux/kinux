@@ -14,6 +14,8 @@ jobs:
       - run: |
           mkdir -p kinux-fs
           sudo tar -xJf kinux-rootfs.tar.xz -C kinux-fs
+          mkdir -p kinux-fs/lib64
+          sudo cp /lib64/ld-linux-x86-64.so.2 kinux-fs/lib64/
           sudo mount --bind /dev kinux-fs/dev
           sudo mount --bind /proc kinux-fs/proc
           sudo mount --bind /sys kinux-fs/sys
