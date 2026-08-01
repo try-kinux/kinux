@@ -35,7 +35,14 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           rm -rf oils-for-unix-0.37.0
           
-          musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -I/usr/include -L/usr/lib/x86_64-linux-gnu -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          gcc bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          
+          cp /usr/lib/x86_64-linux-gnu/libarchive.so.13 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libcurl.so.4 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libzstd.so.1 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libjson-c.so.5 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libssl.so.3 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libcrypto.so.3 kinux-rootfs/usr/lib/
           
           cat > kinux-rootfs/etc/os-release << 'EOF'
           NAME="Kinux"
@@ -57,9 +64,12 @@ jobs:
           mkdir -p kinux-rootfs/home/kinux
           echo 'export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"' > kinux-rootfs/home/kinux/.profile
           echo 'export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"' > kinux-rootfs/root/.profile
+          echo 'export LD_LIBRARY_PATH="/usr/lib"' >> kinux-rootfs/home/kinux/.profile
+          echo 'export LD_LIBRARY_PATH="/usr/lib"' >> kinux-rootfs/root/.profile
           
           cat > kinux-rootfs/etc/profile << 'EOF'
           export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="/usr/lib"
           EOF
           
           sudo tar -cJf kinux-rootfs.tar.xz -C kinux-rootfs .
