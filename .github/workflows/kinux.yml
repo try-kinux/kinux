@@ -35,7 +35,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           rm -rf oils-for-unix-0.37.0
           
-          musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          musl-gcc -static bux.c -o kinux-rootfs/usr/local/bin/bux -I/usr/include -L/usr/lib/x86_64-linux-gnu -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
           
           cat > kinux-rootfs/etc/os-release << 'EOF'
           NAME="Kinux"
