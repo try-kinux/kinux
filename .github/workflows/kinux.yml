@@ -23,7 +23,7 @@ jobs:
           sudo cp bux.c alpine-root/tmp/
           
           sudo chroot alpine-root /bin/sh -c "
-            apk add curl wpa_supplicant vis tcc
+            apk add curl wpa_supplicant vis
             apk add build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig
             apk add skalibs-dev execline-dev s6-dev s6-rc-dev
             
@@ -35,6 +35,10 @@ jobs:
             git clone --depth 1 https://git.suckless.org/ubase
             cd ubase && make && make install
             cd /tmp && rm -rf ubase
+            
+            git clone --depth 1 https://repo.or.cz/tinycc.git
+            cd tinycc && ./configure --prefix=/usr/local && make && make install
+            cd /tmp && rm -rf tinycc
             
             wget -qO- https://ftp.gnu.org/gnu/ncurses/ncurses-6.4.tar.gz | tar -xz
             cd ncurses-6.4 && ./configure --prefix=/usr/local --enable-widec --with-shared && make -j\$(nproc) && make install
@@ -51,7 +55,9 @@ jobs:
             
             apk del build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig skalibs-dev execline-dev s6-dev s6-rc-dev
             apk add skalibs execline s6 s6-rc
-            apk del apk-tools busybox
+            
+            ln -sf /usr/local/bin/oils-for-unix /bin/sh
+            apk del apk-tools busybox --force 2>/dev/null || true
           "
           
           sudo bash -c "cat > alpine-root/etc/os-release << 'KINUXEOF'
