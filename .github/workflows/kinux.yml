@@ -11,12 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools git make
+      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools git make pkg-config
 
       - run: |
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
           mkdir -p kinux-rootfs
-          mkdir -p kinux-rootfs/{bin,dev,etc,proc,sys,tmp,usr/local/bin,usr/lib,var,home,root}
+          mkdir -p kinux-rootfs/{bin,dev,etc,proc,sys,tmp,usr/local/bin,usr/local/lib,usr/lib,var,home,root}
           
           git clone --depth 1 https://git.suckless.org/sbase
           cd sbase
@@ -34,12 +34,13 @@ jobs:
           
           wget -qO- https://ftp.gnu.org/gnu/ncurses/ncurses-6.4.tar.gz | tar -xz
           cd ncurses-6.4
-          CC=musl-gcc ./configure --prefix=/usr/local --enable-widec --with-shared
+          CC=musl-gcc ./configure --prefix=/usr/local --enable-widec --with-shared --with-termlib
           make -j$(nproc)
           make DESTDIR="$GITHUB_WORKSPACE/kinux-rootfs" install
           cd "$GITHUB_WORKSPACE"
           rm -rf ncurses-6.4
           
+          export PKG_CONFIG_PATH="$GITHUB_WORKSPACE/kinux-rootfs/usr/local/lib/pkgconfig"
           git clone --depth 1 https://github.com/martanne/vis
           cd vis
           CC=musl-gcc LDFLAGS="-L$GITHUB_WORKSPACE/kinux-rootfs/usr/local/lib -lncursesw" CFLAGS="-I$GITHUB_WORKSPACE/kinux-rootfs/usr/local/include" ./configure
@@ -60,7 +61,6 @@ jobs:
           cd oils-for-unix-0.37.0
           CC=musl-gcc CXX=musl-g++ ./configure
           CC=musl-gcc CXX=musl-g++ _build/oils.sh
-          mkdir -p "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin"
           cp _bin/cxx-opt-sh/oils-for-unix "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin/"
           cd "$GITHUB_WORKSPACE"
           rm -rf oils-for-unix-0.37.0
