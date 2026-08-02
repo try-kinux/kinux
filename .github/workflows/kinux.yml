@@ -11,19 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools git make
+      - run: sudo apt update && sudo apt install -y xz-utils
 
       - run: |
-          export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
           mkdir -p alpine-root
           
           wget -qO alpine-minirootfs.tar.gz https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz
           sudo tar -xzf alpine-minirootfs.tar.gz -C alpine-root
           rm alpine-minirootfs.tar.gz
           sudo cp /etc/resolv.conf alpine-root/etc/resolv.conf
+          sudo cp bux.c alpine-root/tmp/
           
           sudo chroot alpine-root /bin/sh -c "
-            apk add curl wpa_supplicant build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make
+            apk add curl wpa_supplicant build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make skalibs-dev execline-dev s6-dev s6-rc-dev
             git clone --depth 1 https://git.suckless.org/sbase /tmp/sbase
             cd /tmp/sbase && make && make install
             git clone --depth 1 https://git.suckless.org/ubase /tmp/ubase
@@ -36,41 +36,34 @@ jobs:
             cd /tmp/tinycc-0.9.27 && ./configure --prefix=/usr/local && make && make install
             wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz -C /tmp
             cd /tmp/oils-for-unix-0.37.0 && ./configure && _build/oils.sh && cp _bin/cxx-opt-sh/oils-for-unix /usr/local/bin/
+            cd /tmp && gcc bux.c -o /usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
             rm -rf /tmp/*
-            apk del build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make
+            adduser -D -s /usr/local/bin/oils-for-unix kinux
+            apk del build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make skalibs-dev execline-dev s6-dev s6-rc-dev
+            apk add skalibs execline s6 s6-rc
             apk del apk-tools busybox
           "
           
-          sudo cp bux.c alpine-root/tmp/
-          sudo chroot alpine-root /bin/sh -c "
-            cd /tmp
-            gcc bux.c -o /usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
-            rm /tmp/bux.c
-          "
-          
-          cat > alpine-root/etc/os-release << 'EOF'
+          sudo bash -c "cat > alpine-root/etc/os-release << 'KINUXEOF'
           NAME=Kinux
           VERSION=v0
           ID=kinux
           VERSION_ID=15.0
-          PRETTY_NAME="Kinux"
-          ANSI_COLOR="0;35"
-          EOF
-          
-          sudo chroot alpine-root /bin/sh -c "
-            adduser -D -s /usr/local/bin/oils-for-unix kinux
-          "
+          PRETTY_NAME=\"Kinux\"
+          ANSI_COLOR=\"0;35\"
+          KINUXEOF"
           
           echo 'export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:$PATH"' | sudo tee -a alpine-root/home/kinux/.profile
           echo 'export LD_LIBRARY_PATH="/usr/local/lib:/usr/lib"' | sudo tee -a alpine-root/home/kinux/.profile
           
-          cat > alpine-root/etc/profile << 'EOF'
-          export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:$PATH"
-          export LD_LIBRARY_PATH="/usr/local/lib:/usr/lib"
-          EOF
+          sudo bash -c "cat > alpine-root/etc/profile << 'KINUXEOF'
+          export PATH=\"/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:\$PATH\"
+          export LD_LIBRARY_PATH=\"/usr/local/lib:/usr/lib\"
+          KINUXEOF"
           
           cd alpine-root/bin
           sudo ln -sf /usr/local/bin/oils-for-unix sh
+          sudo ln -sf /usr/local/bin/oils-for-unix init
           cd "$GITHUB_WORKSPACE"
           
           sudo tar -cJf kinux-rootfs.tar.xz -C alpine-root .
