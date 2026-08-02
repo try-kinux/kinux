@@ -1,0 +1,104 @@
+name: Creating Rootfs
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools git make
+
+      - run: |
+          mkdir -p kinux-rootfs
+          mkdir -p kinux-rootfs/{bin,dev,etc,proc,sys,tmp,usr/local/bin,usr/lib,var,home,root,etc/sbase,etc/ubase}
+          
+          git clone --depth 1 https://git.suckless.org/sbase
+          cd sbase
+          CC=musl-gcc make
+          make DESTDIR="$GITHUB_WORKSPACE/kinux-rootfs" install
+          cd "$GITHUB_WORKSPACE"
+          rm -rf sbase
+          
+          git clone --depth 1 https://git.suckless.org/ubase
+          cd ubase
+          CC=musl-gcc make
+          make DESTDIR="$GITHUB_WORKSPACE/kinux-rootfs" install
+          cd "$GITHUB_WORKSPACE"
+          rm -rf ubase
+          
+          git clone --depth 1 https://github.com/martanne/vis
+          cd vis
+          CC=musl-gcc ./configure
+          make
+          cp vis "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin/"
+          cd "$GITHUB_WORKSPACE"
+          rm -rf vis
+          
+          wget -qO- https://github.com/TinyCC/tinycc/archive/refs/tags/0.9.27.tar.gz | tar -xz
+          cd tinycc-0.9.27
+          ./configure --cc=musl-gcc --prefix=/usr/local
+          make
+          make DESTDIR="$GITHUB_WORKSPACE/kinux-rootfs" install
+          cd "$GITHUB_WORKSPACE"
+          rm -rf tinycc-0.9.27
+          
+          wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz
+          cd oils-for-unix-0.37.0
+          CC=musl-gcc CXX=musl-g++ ./configure
+          CC=musl-gcc CXX=musl-g++ _build/oils.sh
+          mkdir -p "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin"
+          cp _bin/cxx-opt-sh/oils-for-unix "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin/"
+          cd "$GITHUB_WORKSPACE"
+          rm -rf oils-for-unix-0.37.0
+          
+          gcc bux.c -o kinux-rootfs/usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
+          cp /usr/lib/x86_64-linux-gnu/libarchive.so.13 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libcurl.so.4 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libzstd.so.1 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libjson-c.so.5 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libssl.so.3 kinux-rootfs/usr/lib/
+          cp /usr/lib/x86_64-linux-gnu/libcrypto.so.3 kinux-rootfs/usr/lib/
+          
+          cat > kinux-rootfs/etc/os-release << 'EOF'
+          NAME="Kinux"
+          VERSION="1.0.0 (Shelf)"
+          DEFAULT_SHELL="oils-for-unix"
+          HOME_URL="https://try-kinux.github.io/kinux/"
+          EOF
+          
+          cat > kinux-rootfs/etc/passwd << 'EOF'
+          root:x:0:0:root:/root:/usr/local/bin/oils-for-unix
+          kinux:x:1000:1000:kinux:/home/kinux:/usr/local/bin/oils-for-unix
+          EOF
+          
+          cat > kinux-rootfs/etc/group << 'EOF'
+          root:x:0:
+          kinux:x:1000:
+          EOF
+          
+          mkdir -p kinux-rootfs/home/kinux
+          echo 'export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"' > kinux-rootfs/home/kinux/.profile
+          echo 'export LD_LIBRARY_PATH="/usr/lib"' >> kinux-rootfs/home/kinux/.profile
+          
+          cat > kinux-rootfs/etc/profile << 'EOF'
+          export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"
+          export LD_LIBRARY_PATH="/usr/lib"
+          EOF
+          
+          cd kinux-rootfs/bin
+          ln -s /usr/local/bin/oils-for-unix sh
+          cd "$GITHUB_WORKSPACE"
+          
+          sudo tar -cJf kinux-rootfs.tar.xz -C kinux-rootfs .
+          mkdir -p artifacts
+          sudo mv kinux-rootfs.tar.xz artifacts/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kinux-rootfs
+          path: artifacts/kinux-rootfs.tar.xz
