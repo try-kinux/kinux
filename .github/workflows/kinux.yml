@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools git make libncurses-dev
+      - run: sudo apt update && sudo apt install -y xz-utils libarchive-dev libcurl4-openssl-dev libzstd-dev libjson-c-dev libssl-dev musl-tools git make
 
       - run: |
           export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -32,9 +32,17 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           rm -rf ubase
           
+          wget -qO- https://ftp.gnu.org/gnu/ncurses/ncurses-6.4.tar.gz | tar -xz
+          cd ncurses-6.4
+          CC=musl-gcc ./configure --prefix=/usr/local --enable-widec --with-shared
+          make -j$(nproc)
+          make DESTDIR="$GITHUB_WORKSPACE/kinux-rootfs" install
+          cd "$GITHUB_WORKSPACE"
+          rm -rf ncurses-6.4
+          
           git clone --depth 1 https://github.com/martanne/vis
           cd vis
-          CC=musl-gcc LDFLAGS="-L/usr/lib/x86_64-linux-gnu -lncurses" ./configure
+          CC=musl-gcc LDFLAGS="-L$GITHUB_WORKSPACE/kinux-rootfs/usr/local/lib -lncursesw" CFLAGS="-I$GITHUB_WORKSPACE/kinux-rootfs/usr/local/include" ./configure
           make
           cp vis "$GITHUB_WORKSPACE/kinux-rootfs/usr/local/bin/"
           cd "$GITHUB_WORKSPACE"
@@ -86,11 +94,11 @@ jobs:
           
           mkdir -p kinux-rootfs/home/kinux
           echo 'export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"' > kinux-rootfs/home/kinux/.profile
-          echo 'export LD_LIBRARY_PATH="/usr/lib"' >> kinux-rootfs/home/kinux/.profile
+          echo 'export LD_LIBRARY_PATH="/usr/local/lib:/usr/lib"' >> kinux-rootfs/home/kinux/.profile
           
           cat > kinux-rootfs/etc/profile << 'EOF'
           export PATH="/usr/local/bin:/bin:/usr/bin:$PATH"
-          export LD_LIBRARY_PATH="/usr/lib"
+          export LD_LIBRARY_PATH="/usr/local/lib:/usr/lib"
           EOF
           
           cd kinux-rootfs/bin
