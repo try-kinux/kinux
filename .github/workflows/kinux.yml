@@ -23,35 +23,33 @@ jobs:
           sudo cp bux.c alpine-root/tmp/
           
           sudo chroot alpine-root /bin/sh -c "
-            apk add curl wpa_supplicant build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig vis tcc
+            apk add curl wpa_supplicant vis tcc
+            apk add build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig
             apk add skalibs-dev execline-dev s6-dev s6-rc-dev
             
             cd /tmp
             git clone --depth 1 https://git.suckless.org/sbase
-            cd sbase && make && make install && cd /tmp
-            rm -rf sbase
+            cd sbase && make && make install
+            cd /tmp && rm -rf sbase
             
             git clone --depth 1 https://git.suckless.org/ubase
-            cd ubase && make && make install && cd /tmp
-            rm -rf ubase
+            cd ubase && make && make install
+            cd /tmp && rm -rf ubase
             
             wget -qO- https://ftp.gnu.org/gnu/ncurses/ncurses-6.4.tar.gz | tar -xz
-            cd ncurses-6.4 && ./configure --prefix=/usr/local --enable-widec --with-shared && make -j\$(nproc) && make install && cd /tmp
-            rm -rf ncurses-6.4
+            cd ncurses-6.4 && ./configure --prefix=/usr/local --enable-widec --with-shared && make -j\$(nproc) && make install
+            cd /tmp && rm -rf ncurses-6.4
             
             wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz
-            cd oils-for-unix-0.37.0 && ./configure && _build/oils.sh && cp _bin/cxx-opt-sh/oils-for-unix /usr/local/bin/ && cd /tmp
-            rm -rf oils-for-unix-0.37.0
+            cd oils-for-unix-0.37.0 && ./configure && _build/oils.sh && cp _bin/cxx-opt-sh/oils-for-unix /usr/local/bin/
+            cd /tmp && rm -rf oils-for-unix-0.37.0
             
             gcc /tmp/bux.c -o /usr/local/bin/bux -larchive -lcurl -lzstd -lpthread -ljson-c -lssl -lcrypto
             rm /tmp/bux.c
             
             adduser -D -s /usr/local/bin/oils-for-unix kinux
-          "
-          
-          sudo chroot alpine-root /bin/sh -c "
-            apk del build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig
-            apk del skalibs-dev execline-dev s6-dev s6-rc-dev
+            
+            apk del build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig skalibs-dev execline-dev s6-dev s6-rc-dev
             apk add skalibs execline s6 s6-rc
             apk del apk-tools busybox
           "
