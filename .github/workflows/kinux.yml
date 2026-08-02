@@ -23,7 +23,7 @@ jobs:
           sudo cp bux.c alpine-root/tmp/
           
           sudo chroot alpine-root /bin/sh -c "
-            apk add curl wpa_supplicant build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig
+            apk add curl wpa_supplicant build-base libarchive-dev curl-dev zstd-dev json-c-dev openssl-dev git make pkgconfig vis tcc
             apk add skalibs-dev execline-dev s6-dev s6-rc-dev
             
             cd /tmp
@@ -35,12 +35,6 @@ jobs:
             
             wget -qO- https://ftp.gnu.org/gnu/ncurses/ncurses-6.4.tar.gz | tar -xz
             cd ncurses-6.4 && ./configure --prefix=/usr/local --enable-widec --with-shared && make -j\$(nproc) && make install && cd /tmp
-            
-            git clone --depth 1 https://github.com/martanne/vis
-            cd vis && ./configure && make && cp vis /usr/local/bin/ && cd /tmp
-            
-            git clone --depth 1 https://repo.or.cz/tinycc.git
-            cd tinycc && ./configure --prefix=/usr/local && make && make install && cd /tmp
             
             wget -qO- https://oils.pub/download/oils-for-unix-0.37.0.tar.gz | tar -xz
             cd oils-for-unix-0.37.0 && ./configure && _build/oils.sh && cp _bin/cxx-opt-sh/oils-for-unix /usr/local/bin/ && cd /tmp
